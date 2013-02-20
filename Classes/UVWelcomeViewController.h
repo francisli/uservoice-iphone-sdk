@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "UVBaseInstantAnswersViewController.h"
+#import "UVInitialLoadManager.h"
 
 @interface UVWelcomeViewController : UVBaseInstantAnswersViewController <UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UISearchDisplayDelegate> {
     UIScrollView *scrollView;
@@ -26,6 +27,9 @@
 @property (nonatomic, retain) UIView *flashView;
 @property (nonatomic, retain) UIView *buttons;
 @property (nonatomic, retain) UISearchDisplayController *searchController;
+
+@property (nonatomic, retain) UIView *loadingView;
+@property (nonatomic, retain) UVInitialLoadManager *loader;
 
 - (void)updateLayout;
 

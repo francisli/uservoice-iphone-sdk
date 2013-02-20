@@ -41,9 +41,13 @@
 @synthesize buttons;
 @synthesize searchController;
 
+@synthesize loadingView;
+@synthesize loader;
+
 - (id)init {
     if (self = [super init]) {
-        self.title = NSLocalizedStringFromTable(@"Welcome", @"UserVoice", nil);
+        self.title = NSLocalizedStringFromTable(@"Feedback & Support", @"UserVoice", nil);
+        self.tabBarItem.image = [UIImage imageNamed:@"uv_icon.png"];
     }
     return self;
 }
@@ -291,11 +295,13 @@
 - (void)loadView {
     [super loadView];
     self.navigationItem.title = NSLocalizedStringFromTable(@"Feedback & Support", @"UserVoice", nil);
-    self.navigationItem.leftBarButtonItem = [[[UIBarButtonItem alloc] initWithTitle:NSLocalizedStringFromTable(@"Close", @"UserVoice", nil)
-                                                                              style:UIBarButtonItemStylePlain
-                                                                             target:self
-                                                                             action:@selector(dismissUserVoice)] autorelease];
-
+    if ([UVSession currentSession].isModal) {
+        self.navigationItem.leftBarButtonItem = [[[UIBarButtonItem alloc] initWithTitle:NSLocalizedStringFromTable(@"Close", @"UserVoice", nil)
+                                                                                  style:UIBarButtonItemStylePlain
+                                                                                 target:self
+                                                                                 action:@selector(dismissUserVoice)] autorelease];
+    }
+    
     self.scrollView = [[[UIScrollView alloc] initWithFrame:[self contentFrame]] autorelease];
     self.view = scrollView;
     scrollView.backgroundColor = [UIColor colorWithRed:0.94f green:0.95f blue:0.95f alpha:1.0f];
@@ -400,7 +406,7 @@
         [footer addSubview:logo];
         tableView.tableFooterView = footer;
     }
-
+    
     [tableView reloadData];
     [self updateLayout];
 }
@@ -410,7 +416,45 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-    [self updateLayout];
+    if (self.isMovingToParentViewController) {
+        self.loadingView = [[UIView alloc] initWithFrame:self.view.bounds];
+        self.loadingView.backgroundColor = [UVStyleSheet backgroundColor];
+        
+        UIView *loading = [[[UIView alloc] initWithFrame:CGRectMake(0, 120, self.view.bounds.size.width, 100)] autorelease];
+        loading.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleTopMargin;
+        UIActivityIndicatorView *activity = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge] autorelease];
+        if ([activity respondsToSelector:@selector(setColor:)]) {
+            [activity setColor:[UIColor grayColor]];
+        } else {
+            [activity release];
+            activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        }
+        activity.center = CGPointMake(loading.bounds.size.width/2, 40);
+        [loading addSubview:activity];
+        [activity startAnimating];
+        UILabel *label = [[[UILabel alloc] initWithFrame:CGRectMake(0, 70, loading.frame.size.width, 20)] autorelease];
+        label.backgroundColor = [UIColor clearColor];
+        label.font = [UIFont systemFontOfSize:15];
+        label.textColor = [UIColor darkGrayColor];
+        label.textAlignment = UITextAlignmentCenter;
+        label.text = NSLocalizedStringFromTable(@"Loading...", @"UserVoice", nil);
+        [label sizeToFit];
+        label.center = CGPointMake(loading.bounds.size.width/2, 85);
+        [loading addSubview:label];
+        [loading sizeToFit];
+        [self.loadingView addSubview:loading];
+        
+        [self.view addSubview:loadingView];
+        
+        self.loader = [UVInitialLoadManager loadWithDelegate:self action:@selector(removeLoadingView)];
+    } else {
+        [self updateLayout];
+    }
+}
+
+- (void)removeLoadingView {
+    [self.loadingView removeFromSuperview];
+    [self updateLayoutAnimated:YES];
 }
 
 - (void)dealloc {
@@ -421,6 +465,10 @@
     self.flashView = nil;
     self.buttons = nil;
     self.searchController = nil;
+    
+    self.loadingView = nil;
+    self.loader = nil;
+    
     [super dealloc];
 }
 
