@@ -304,7 +304,7 @@
     
     self.scrollView = [[[UIScrollView alloc] initWithFrame:[self contentFrame]] autorelease];
     self.view = scrollView;
-    scrollView.backgroundColor = [UIColor colorWithRed:0.94f green:0.95f blue:0.95f alpha:1.0f];
+    scrollView.backgroundColor = [UVStyleSheet backgroundColor];
     scrollView.alwaysBounceVertical = YES;
 
     if ([UVSession currentSession].config.showKnowledgeBase) {
@@ -454,6 +454,7 @@
 
 - (void)removeLoadingView {
     [self.loadingView removeFromSuperview];
+    [self.tableView reloadData];
     [self updateLayoutAnimated:YES];
 }
 

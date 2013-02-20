@@ -321,7 +321,7 @@
                                                                                                 target:self
                                                                                                 action:@selector(composeButtonTapped)] autorelease];
         if ([self.navigationItem.rightBarButtonItem respondsToSelector:@selector(setTintColor:)])
-            self.navigationItem.rightBarButtonItem.tintColor = [UIColor colorWithRed:0.24f green:0.51f blue:0.95f alpha:1.0f];
+            self.navigationItem.rightBarButtonItem.tintColor = [UVStyleSheet navigationBarTintColor];
     }
 
     if ([UVSession currentSession].isModal && firstController) {
