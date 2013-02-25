@@ -48,6 +48,7 @@
     if (self = [super init]) {
         self.title = NSLocalizedStringFromTable(@"Feedback & Support", @"UserVoice", nil);
         self.tabBarItem.image = [UIImage imageNamed:@"uv_icon.png"];
+        self.hidesBottomBarWhenPushed = YES;
     }
     return self;
 }
