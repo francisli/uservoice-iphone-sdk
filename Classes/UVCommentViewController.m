@@ -41,9 +41,12 @@
 - (void)didCreateComment:(UVComment *)comment {
     [self hideActivityIndicator];
     self.suggestion.commentsCount += 1;
-    UINavigationController *navController = (UINavigationController *)self.presentingViewController;
-    UVSuggestionDetailsViewController *previous = (UVSuggestionDetailsViewController *)[navController.viewControllers lastObject];
-    [previous reloadComments];
+// Commenting out because this doesn't work when presented non-modally in tab bar controller
+// instead, adding reloadComments to viewWillAppear in UVSuggestionDetailsViewController
+//
+//    UINavigationController *navController = (UINavigationController *)self.presentingViewController;
+//    UVSuggestionDetailsViewController *previous = (UVSuggestionDetailsViewController *)[navController.viewControllers lastObject];
+//    [previous reloadComments];
     [self dismiss];
 }
 

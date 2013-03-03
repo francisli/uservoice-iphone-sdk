@@ -548,6 +548,10 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     self.navigationController.navigationBar.layer.masksToBounds = YES;
+    if (!self.isMovingToParentViewController) {
+        //// coming back from another screen (i.e. post comment screen), so reload comments
+        [self reloadComments];
+    }
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
