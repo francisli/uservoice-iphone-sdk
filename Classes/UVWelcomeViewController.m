@@ -418,6 +418,9 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     if (self.isMovingToParentViewController) {
+        //// clear any flash message from previous interaction
+        [UVSession currentSession].flashMessage = nil;
+        
         self.loadingView = [[UIView alloc] initWithFrame:self.view.bounds];
         self.loadingView.backgroundColor = [UVStyleSheet backgroundColor];
         
