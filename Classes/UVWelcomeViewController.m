@@ -419,7 +419,7 @@
 - (void)viewWillAppear:(BOOL)animated {
     if (self.isMovingToParentViewController) {
         //// clear any flash message from previous interaction
-        [UVSession currentSession].flashMessage = nil;
+        [self clearFlash];
         
         self.loadingView = [[UIView alloc] initWithFrame:self.view.bounds];
         self.loadingView.backgroundColor = [UVStyleSheet backgroundColor];
@@ -459,7 +459,7 @@
 - (void)removeLoadingView {
     [self.loadingView removeFromSuperview];
     [self.tableView reloadData];
-    [self updateLayoutAnimated:YES];
+    [self updateLayoutAnimated:NO];
 }
 
 - (void)dealloc {

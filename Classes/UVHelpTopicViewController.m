@@ -71,7 +71,6 @@
     [self setupGroupedTableView];
     tableView.delegate = self;
     tableView.dataSource = self;
-    self.navigationItem.title = topic.name;
     if ([UVSession currentSession].config.showContactUs) {
         UIView *footer = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 60)] autorelease];
         footer.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -83,9 +82,11 @@
         tableView.tableFooterView = footer;
     }
     if (self.topic) {
+        self.navigationItem.title = topic.name;
         [self showActivityIndicator];
         [UVArticle getArticlesWithTopicId:topic.topicId delegate:self];
     } else {
+        self.navigationItem.title = NSLocalizedStringFromTable(@"All Articles", @"UserVoice", nil);
         self.articles = [UVSession currentSession].articles;
         [tableView reloadData];
     }
