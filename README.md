@@ -3,12 +3,12 @@ Overview
 
 UserVoice for iOS allows you to embed UserVoice directly in your iPhone or iPad app.
 
-![Tour](http://www.uservoice.com/_assets/images/content/UserVoice-iOS-animation-joshua.gif)
+![Tour](https://www.uservoice.com/assets/img/ios/ios-animation.gif)
 
 You will need to have a UserVoice account (free) for it to connect to. Go to [uservoice.com/ios](http://uservoice.com/ios) to sign up.
 
 Binary builds of the SDK are available for download.
-* Current release: [2.0.7](https://github.com/uservoice/uservoice-iphone-sdk/raw/master/dist/UserVoiceSDK-2.0.7.tar.gz)
+* Current release: [2.0.9](https://github.com/uservoice/uservoice-iphone-sdk/raw/master/dist/UserVoiceSDK-2.0.9.tar.gz)
 
 We also have an [example app](https://github.com/uservoice/uservoice-iphone-example) on GitHub that demonstrates how to build and integrate the SDK.
 
@@ -203,7 +203,7 @@ If you have any other questions please contact support@uservoice.com.
 Translations
 ------------
 
-Currently the UI is available in English, French, Italian, Traditional Chinese, and Dutch.
+Currently the UI is available in English, French, German, Dutch, Italian, and Traditional Chinese.
 We are using [Twine](https://github.com/mobiata/twine) to manage the translations.
 
 To contribute to the translations, follow these steps:
@@ -228,6 +228,26 @@ translation is missing for a string that does not appear in the SDK codebase,
 you will need to contribute to the main [UserVoice translation
 site](http://translate.uservoice.com/).
 
+iOS Versions
+------------
+
+* Full support for iOS 5.0+
+* For iOS 4.3 we accept patches, but don't guarantee support
+* Earlier versions of iOS are not supported
+* Builds are provided for armv7--there is no armv6 device that runs a supported version of iOS
+* In general, the plan is to keep in step with public releases of Xcode
+
+Contributors
+------------
+
+Special thanks to:
+
+* [netbe](https://github.com/netbe) for the French translation
+* [Piero87](https://github.com/Piero87) for the Italian translation
+* [zetachang](https://github.com/zetachang) for the Traditional Chinese translation
+* [nvh](https://github.com/nvh) for the Dutch translation
+* [vinzenzweber](https://github.com/vinzenzweber) and [Blockhaus Media](http://www.blockhaus-media.com/) for the German translation
+* Everyone else who [reported bugs or made pull requests](https://github.com/uservoice/uservoice-iphone-sdk/issues?state=closed)!
 
 License
 -------

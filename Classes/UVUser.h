@@ -28,6 +28,7 @@
     NSMutableArray *supportedSuggestions;
     NSMutableArray *createdSuggestions;
     NSDate *createdAt;
+    NSDictionary *visibleForumsDict;
 }
 
 @property (assign) NSInteger userId;
@@ -44,18 +45,15 @@
 @property (nonatomic, retain) NSMutableArray *supportedSuggestions;
 @property (nonatomic, retain) NSMutableArray *createdSuggestions;
 @property (nonatomic, retain) NSDate *createdAt;
+@property (nonatomic, retain) NSDictionary *visibleForumsDict;
 
 - (NSInteger)createdSuggestionsCount;
 - (NSInteger)supportedSuggestionsCount;
 
 + (id)forgotPassword:(NSString *)email delegate:(id)delegate;
 
-// fetch
-+ (id)getWithUserId:(NSInteger)userId delegate:(id)delegate;
-
 // discover
 + (id)discoverWithEmail:(NSString *)email delegate:(id)delegate;
-+ (id)discoverWithGUID:(NSString *)guid delegate:(id)delegate;
 
 // create
 + (id)findOrCreateWithEmail:(NSString *)anEmail andName:(NSString *)aName andDelegate:(id)delegate;
@@ -74,6 +72,9 @@
 // others
 - (id)forgotPasswordForEmail:(NSString *)anEmail andDelegate:(id)delegate;
 - (BOOL)hasEmail;
+
+// this is used to get around an order dependency when loading the config
+- (void)updateVotesRemaining;
 
 // Returns the user's name, or "Anonymous" if they don't have one.
 - (NSString *)nameOrAnonymous;

@@ -1,5 +1,17 @@
 ## master ##
 
+## 2.0.9 ##
+
+* Add German translation (thanks to vinzenzweber)
+* Fix a layout bug affecting translated labels on the idea form
+* Fix a bug where initialization would stall if sso fails
+
+## 2.0.8 ##
+
+* Fix a crash related to comments with null text
+* Fix a crash on iOS 4.3
+* Fix a bug where the number of remaining votes would not be set correctly
+* Fix a compatibility issue with libraries that introspect all classes in the VM (e.g. Pony Debugger)
 * Fix a bug related to showPostIdea = NO
 
 ## 2.0.7 ##
