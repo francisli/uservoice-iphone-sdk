@@ -27,6 +27,16 @@
 
 @implementation UVBaseTicketViewController
 
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return nil;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 0;
+}
+
 @synthesize emailField;
 @synthesize nameField;
 @synthesize selectedCustomFieldValues;
