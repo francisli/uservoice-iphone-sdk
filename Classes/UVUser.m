@@ -14,7 +14,7 @@
 #import "UVConfig.h"
 #import "UVClientConfig.h"
 #import "UVForum.h"
-#import "NSString+HTMLEntities.h"
+#import "UVUtils.h"
 
 @implementation UVUser
 
@@ -109,44 +109,6 @@
                  rootKey:@"user"];
 }
 
-+ (void)processModel:(id)model {
-    // add to the cache
-    UVUser *user = model;
-    NSString *key = [NSString stringWithFormat:@"%d", user.userId];
-
-    if ([[UVSession currentSession].userCache objectForKey:key]==nil) {
-        [[UVSession currentSession].userCache setObject:model forKey:key];
-    }
-}
-
-- (id)forgotPasswordForEmail:(NSString *)anEmail andDelegate:(id)delegate {
-    NSString *path = [UVUser apiPath:@"/users/forgot_password.json"];
-    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
-                            anEmail, @"user[email]",
-                            nil];
-
-    return [[self class] getPath:path
-                      withParams:params
-                          target:delegate
-                        selector:@selector(didSendForgotPassword)
-                         rootKey:@"user"];
-}
-
-- (id)updateName:(NSString *)newName email:(NSString *)newEmail delegate:(id)delegate {
-    NSString *path = [UVUser apiPath:[NSString stringWithFormat:@"/users/%d.json",
-                                      [UVSession currentSession].user.userId]];
-    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
-                            newName == nil ? @"" : newName, @"user[display_name]",
-                            newEmail == nil ? @"" : newEmail, @"user[email]",
-                            nil];
-
-    return [[self class] putPath:path
-                      withParams:params
-                          target:delegate
-                        selector:@selector(didUpdateUser:)
-                         rootKey:@"user"];
-}
-
 - (id)identify:(NSString *)externalId withScope:(NSString *)externalScope delegate:(id)delegate {
     NSString *path = [UVUser apiPath:@"/users/identify.json"];
     NSDictionary *payload = @{
@@ -170,7 +132,7 @@
 - (id)initWithDictionary:(NSDictionary *)dict {
     if (self = [super init]) {
         self.userId = [(NSNumber *)[dict objectForKey:@"id"] integerValue];
-        self.name = [[self objectOrNilForDict:dict key:@"name"] stringByDecodingHTMLEntities];
+        self.name = [UVUtils decodeHTMLEntities:[self objectOrNilForDict:dict key:@"name"]];
         self.displayName = [self objectOrNilForDict:dict key:@"name"];
         self.email = [self objectOrNilForDict:dict key:@"email"];
         self.ideaScore = [(NSNumber *)[dict objectForKey:@"idea_score"] integerValue];
@@ -193,7 +155,7 @@
         self.supportedSuggestions = [NSMutableArray array];
         
         self.visibleForumsDict = [self objectOrNilForDict:dict key:@"visible_forums"];
-        if ([UVSession currentSession].clientConfig.forum)
+        if ([UVSession currentSession].forum)
           [self updateVotesRemaining];
     }
     return self;
@@ -201,12 +163,11 @@
 
 - (void)updateVotesRemaining {
     for (NSDictionary *forum in self.visibleForumsDict) {
-        if ([(NSNumber *)[forum valueForKey:@"id"] integerValue] == [UVSession currentSession].clientConfig.forum.forumId) {
+        if ([(NSNumber *)[forum valueForKey:@"id"] integerValue] == [UVSession currentSession].forum.forumId) {
             NSDictionary *activity = [self objectOrNilForDict:forum key:@"forum_activity"];
             self.votesRemaining = [(NSNumber *)[activity valueForKey:@"votes_available"] integerValue];
         }
     }
-    self.visibleForumsDict = nil;
 }
 
 - (NSInteger)supportedSuggestionsCount {
@@ -263,10 +224,6 @@
         }
     }
     suggestionsNeedReload = NO;
-}
-
-- (NSString *)description {
-    return [NSString stringWithFormat:@"userId: %d\nname: %@\nemail: %@", self.userId, self.displayName, self.email];
 }
 
 - (BOOL)hasEmail {

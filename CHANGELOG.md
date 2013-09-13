@@ -1,5 +1,35 @@
 ## master ##
 
+## 2.0.12 ##
+
+* Respect specified order of articles within a topic
+* Speed up initial load slightly
+* Fix a potential crash when the SDK is dismissed during initial load
+* Add ability to customize navigation bar title appearance
+* Show action sheets from bar button item on iPad
+* Update Traditional Chinese translation (thanks to bcylin)
+* Add Portuguese translation (thanks to hebertialmeida)
+* Add client-side forumId option
+* Add a bunch of translations (thanks to rafaelbaggio)
+* Remove need for client keys
+* A bunch of fixes for iOS 7 (more to come)
+
+## 2.0.11 ##
+
+* Remove the need for -ObjC
+* Use localized quotation marks
+
+## 2.0.10 ##
+
+* Validate required custom fields
+* Fix a layout issue with long custom field values
+* Fix an issue with the flash message when the forum is turned off
+* Fix an issue where the navigation bar would sometimes be hidden after posting an idea
+* Tweak layout of welcome screen when both buttons are hidden
+* Fix an issue where incorrect idea status colors would be visible briefly when scrolling
+* Fix html entity codes showing up on the idea list
+* Fix html entity codes showing up in user names
+
 ## 2.0.9 ##
 
 * Add German translation (thanks to vinzenzweber)
@@ -17,7 +47,7 @@
 ## 2.0.7 ##
 
 * Fix some compatibility issues with iOS 4.3
-* Change 'Connecting to UserVoice' to 'Loading...' for since that message is displayed before we know if the account is white-label or not
+* Change 'Connecting to UserVoice' to 'Loading...' since that message is displayed before we know if the account is white-label or not
 * Stop assuming that the app delegate responds to `window`
 
 ## 2.0.6 ##

@@ -22,6 +22,14 @@
 @synthesize suggestionsNeedReload;
 @synthesize suggestionsCount;
 
++ (id)getWithId:(int)forumId delegate:(id)delegate {
+    return [self getPath:[self apiPath:[NSString stringWithFormat:@"/forums/%d.json", forumId]]
+              withParams:nil
+                  target:delegate
+                selector:@selector(didRetrieveForum:)
+                 rootKey:@"forum"];
+}
+
 - (id)initWithDictionary:(NSDictionary *)dict {
     if (self = [super init]) {
         self.forumId = [(NSNumber *)[dict objectForKey:@"id"] integerValue];
@@ -42,10 +50,6 @@
         }
     }
     return self;
-}
-
-- (NSString *)description {
-    return [NSString stringWithFormat:@"forumId: %d\nname: %@", self.forumId, self.name];
 }
 
 - (void)dealloc {

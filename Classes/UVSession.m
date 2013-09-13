@@ -9,13 +9,11 @@
 #import "UVSession.h"
 #import "UVConfig.h"
 #import "UVStyleSheet.h"
-#import "UVUser.h"
 #import "YOAuth.h"
 #import "UVClientConfig.h"
 #import "UVForum.h"
 #import "UVSubdomain.h"
-#import "NSString+Base64.h"
-#import "NSString+URLEncoding.h"
+#import "UVUtils.h"
 #import <stdlib.h>
 
 @implementation UVSession
@@ -23,9 +21,9 @@
 @synthesize isModal;
 @synthesize config;
 @synthesize clientConfig;
+@synthesize forum;
 @synthesize accessToken;
 @synthesize requestToken;
-@synthesize userCache, startTime;
 @synthesize interactions, interactionSequence, interactionDetails, interactionId;
 @synthesize externalIds;
 @synthesize topics;
@@ -39,7 +37,6 @@
     @synchronized(self) {
         if (!currentSession) {
             currentSession = [[UVSession alloc] init];
-            currentSession.startTime = [NSDate date];
             currentSession.interactions = [NSMutableDictionary dictionary];
             currentSession.interactionSequence = [NSMutableArray array];
             currentSession.interactionDetails = [NSMutableArray array];
@@ -53,17 +50,6 @@
 
 - (BOOL)loggedIn {
     return self.user != nil;
-}
-
-- (id)init {
-    if (self = [super init]) {
-        self.userCache = [NSMutableDictionary dictionary];
-    }
-    return self;
-}
-
-- (void)didRetrieveClientConfig:(UVClientConfig *)config {
-    // Do nothing. The UVClientConfig already sets the config on the current session.
 }
 
 - (void)clearFlash {
@@ -104,13 +90,6 @@
     }
 }
 
-- (void)didIdentifyUser:(UVUser *)user {
-}
-
-- (void)didReceiveError:(NSError *)error {
-    // identify failed
-}
-
 // This is used when dismissing UV so that everything gets reloaded
 - (void)clear {
     self.user = nil;
@@ -120,8 +99,13 @@
 
 - (YOAuthConsumer *)yOAuthConsumer {
     if (!yOAuthConsumer) {
-        yOAuthConsumer = [[YOAuthConsumer alloc] initWithKey:self.config.key
-                                                   andSecret:self.config.secret];
+        if (config.key != nil) {
+            yOAuthConsumer = [[YOAuthConsumer alloc] initWithKey:self.config.key
+                                                       andSecret:self.config.secret];
+        } else if (clientConfig != nil) {
+            yOAuthConsumer = [[YOAuthConsumer alloc] initWithKey:clientConfig.key
+                                                       andSecret:clientConfig.secret];
+        }
     }
     return yOAuthConsumer;
 }
@@ -139,7 +123,7 @@
                             [NSNumber numberWithInt:interactionId], @"interaction_id",
                             [NSNumber numberWithBool:isFinal], @"is_final",
                             nil];
-    NSString *payload = [[[values JSONRepresentation] base64EncodedString] URLEncodedString];
+    NSString *payload = [UVUtils URLEncode:[UVUtils encode64:[UVUtils encodeJSON:values]]];
     NSString *url = [NSString stringWithFormat:@"http://%@/track.gif?%@", config.site, payload];
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
     [NSURLConnection connectionWithRequest:request delegate:nil];

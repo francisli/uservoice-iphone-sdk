@@ -11,15 +11,14 @@
 #import "UVStyleSheet.h"
 #import "UVSession.h"
 #import "UVSuggestion.h"
-#import "UVSuggestionChickletView.h"
 #import "UVUser.h"
 #import "UVClientConfig.h"
-#import "UVUIColorAdditions.h"
 #import "UVImageView.h"
 #import "UVComment.h"
 #import "UVCommentViewController.h"
 #import "UVGradientButton.h"
 #import "UVTruncatingLabel.h"
+#import "UVCallback.h"
 
 #define MARGIN 15
 
@@ -28,7 +27,12 @@
 #define COMMENT_DATE_TAG 1002
 #define COMMENT_TEXT_TAG 1003
 
-@implementation UVSuggestionDetailsViewController
+@implementation UVSuggestionDetailsViewController {
+    
+    UVCallback *_showVotesCallback;
+    UVCallback *_showCommentControllerCallback;
+    
+}
 
 @synthesize suggestion;
 @synthesize scrollView;
@@ -43,10 +47,24 @@
 @synthesize buttons;
 @synthesize voteButton;
 
+- (id)init {
+    self = [super init];
+    
+    if (self) {
+        _showVotesCallback = [[UVCallback alloc] initWithTarget:self selector:@selector(openVoteActionSheet)];
+        _showCommentControllerCallback = [[UVCallback alloc] initWithTarget:self selector:@selector(presentCommentController)];
+    }
+    
+    return self;
+}
+
 - (id)initWithSuggestion:(UVSuggestion *)theSuggestion {
-    if ((self = [super init])) {
+    self = [self init];
+
+    if (self) {
         self.suggestion = theSuggestion;
     }
+
     return self;
 }
 
@@ -71,7 +89,7 @@
 
 - (void)didVoteForSuggestion:(UVSuggestion *)theSuggestion {
     [UVSession currentSession].user.votesRemaining = theSuggestion.votesRemaining;
-    [UVSession currentSession].clientConfig.forum.suggestionsNeedReload = YES;
+    [UVSession currentSession].forum.suggestionsNeedReload = YES;
     self.suggestion = theSuggestion;
     [self hideActivityIndicator];
     [self updateVotesLabel];
@@ -135,9 +153,11 @@
 
 - (void)customizeCellForComment:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
     UVComment *comment = [self.comments objectAtIndex:indexPath.row];
-    cell.backgroundView.backgroundColor = indexPath.row % 2 == 0 ?
-        [UIColor colorWithRed:0.99f green:1.00f blue:1.00f alpha:1.0f] :
-        [UIColor colorWithRed:0.94f green:0.95f blue:0.95f alpha:1.0f];
+    if (!IOS7) {
+        cell.backgroundView.backgroundColor = indexPath.row % 2 == 0 ?
+            [UIColor colorWithRed:0.99f green:1.00f blue:1.00f alpha:1.0f] :
+            [UIColor colorWithRed:0.94f green:0.95f blue:0.95f alpha:1.0f];
+    }
 
     UVImageView *avatar = (UVImageView *)[cell viewWithTag:COMMENT_AVATAR_TAG];
     avatar.URL = comment.avatarUrl;
@@ -164,9 +184,11 @@
 }
 
 - (void)customizeCellForLoad:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
-    cell.backgroundView.backgroundColor = indexPath.row % 2 == 0 ?
-        [UIColor colorWithRed:0.99f green:1.00f blue:1.00f alpha:1.0f] :
-        [UIColor colorWithRed:0.94f green:0.95f blue:0.95f alpha:1.0f];
+    if (!IOS7) {
+        cell.backgroundView.backgroundColor = indexPath.row % 2 == 0 ?
+            [UIColor colorWithRed:0.99f green:1.00f blue:1.00f alpha:1.0f] :
+            [UIColor colorWithRed:0.94f green:0.95f blue:0.95f alpha:1.0f];
+    }
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -210,7 +232,7 @@
 }
 
 - (void)voteButtonTapped {
-    [self requireUserSignedIn:@selector(openVoteActionSheet)];
+    [self requireUserSignedIn:_showVotesCallback];
 }
 
 - (void)openVoteActionSheet {
@@ -260,7 +282,7 @@
 }
 
 - (void)commentButtonTapped {
-    [self requireUserSignedIn:@selector(presentCommentController)];
+    [self requireUserSignedIn:_showCommentControllerCallback];
 }
 
 - (void)presentCommentController {
@@ -373,7 +395,7 @@
     if (suggestion.status) {
         self.statusBar = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, scrollView.bounds.size.width, 27)] autorelease];
         self.statusBar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleBottomMargin;
-        self.statusBar.backgroundColor = [UIColor colorWithHexString:suggestion.statusHexColor];
+        self.statusBar.backgroundColor = [suggestion statusColor];
         UIColor *light = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.2];
         UIColor *zero = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.0];
         UIColor *dark = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.05];
@@ -547,7 +569,9 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-    self.navigationController.navigationBar.layer.masksToBounds = YES;
+    if (!IOS7) {
+        self.navigationController.navigationBar.layer.masksToBounds = YES;
+    }
     if (!self.isMovingToParentViewController) {
         //// coming back from another screen (i.e. post comment screen), so reload comments
         [self reloadComments];
@@ -555,7 +579,9 @@
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
-    self.navigationController.navigationBar.layer.masksToBounds = NO;
+    if (!IOS7) {
+        self.navigationController.navigationBar.layer.masksToBounds = NO;
+    }
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
@@ -575,6 +601,12 @@
     self.responseLabel = nil;
     self.buttons = nil;
     self.voteButton = nil;
+    
+    [_showVotesCallback invalidate];
+    [_showVotesCallback release];
+    [_showCommentControllerCallback invalidate];
+    [_showCommentControllerCallback release];
+    
     [super dealloc];
 }
 

@@ -12,13 +12,18 @@
 #import "UVAccessToken.h"
 #import "UVRequestToken.h"
 #import "UVClientConfig.h"
-#import "NSError+UVExtras.h"
 #import "UVConfig.h"
 #import "UVUser.h"
 #import "UVSession.h"
 #import "UVRequestContext.h"
+#import "UVUtils.h"
+#import "UVForum.h"
 
-@implementation UVInitialLoadManager
+@implementation UVInitialLoadManager {
+    
+    UIAlertView *_errorAlertView;
+    
+}
 
 @synthesize dismissed;
 
@@ -32,35 +37,18 @@
     if (self = [super init]) {
         delegate = theDelegate;
         action = theAction;
-        configDone = NO;
-        userDone = NO;
-        topicsDone = NO;
-        articlesDone = NO;
     }
     return self;
 }
 
 - (void)beginLoad {
-    [UVRequestToken getRequestTokenWithDelegate:self];
-}
-
-- (void)checkComplete {
-    if (configDone && userDone && topicsDone && articlesDone) {
-        if ([UVSession currentSession].user) {
-            [[UVSession currentSession].user updateVotesRemaining];
-        }
-        [delegate performSelector:action];
-    }
-}
-
-- (void)didRetrieveRequestToken:(UVRequestToken *)token {
-    if (dismissed) return;
-    [UVSession currentSession].requestToken = token;
     [UVClientConfig getWithDelegate:self];
-    if ([UVSession currentSession].config.ssoToken != nil) {
-        [UVUser findOrCreateWithSsoToken:[UVSession currentSession].config.ssoToken delegate:self];
-    } else if ([UVSession currentSession].config.email != nil) {
-        [UVUser findOrCreateWithGUID:[UVSession currentSession].config.guid andEmail:[UVSession currentSession].config.email andName:[UVSession currentSession].config.displayName andDelegate:self];
+    [self loadUser];
+}
+
+- (void)loadUser {
+    if ([UVSession currentSession].config.ssoToken != nil || [UVSession currentSession].config.email != nil) {
+        [UVRequestToken getRequestTokenWithDelegate:self];
     } else if ([UVAccessToken exists]) {
         [UVSession currentSession].accessToken = [[[UVAccessToken alloc] initWithExisting] autorelease];
         [UVUser retrieveCurrentUser:self];
@@ -70,8 +58,29 @@
     [self checkComplete];
 }
 
+- (void)checkComplete {
+    if (configDone && userDone && topicsDone && articlesDone) {
+        if ([UVSession currentSession].user) {
+            [[UVSession currentSession].user updateVotesRemaining];
+        }
+        if (dismissed) return;
+        [delegate performSelector:action];
+    }
+}
+
+- (void)didRetrieveRequestToken:(UVRequestToken *)token {
+    if (dismissed) return;
+    [UVSession currentSession].requestToken = token;
+    if ([UVSession currentSession].config.ssoToken != nil) {
+        [UVUser findOrCreateWithSsoToken:[UVSession currentSession].config.ssoToken delegate:self];
+    } else if ([UVSession currentSession].config.email != nil) {
+        [UVUser findOrCreateWithGUID:[UVSession currentSession].config.guid andEmail:[UVSession currentSession].config.email andName:[UVSession currentSession].config.displayName andDelegate:self];
+    }
+}
+
 - (void)didRetrieveClientConfig:(UVClientConfig *)clientConfig {
     if (dismissed) return;
+    [UVSession currentSession].clientConfig = clientConfig;
     configDone = YES;
     if (clientConfig.ticketsEnabled) {
         if ([UVSession currentSession].config.topicId) {
@@ -85,6 +94,18 @@
         topicsDone = YES;
         articlesDone = YES;
     }
+    if (clientConfig.feedbackEnabled) {
+        [UVForum getWithId:[UVSession currentSession].config.forumId delegate:self];
+    } else {
+        forumDone = YES;
+    }
+    [self checkComplete];
+}
+
+- (void)didRetrieveForum:(UVForum *)forum {
+    if (dismissed) return;
+    [UVSession currentSession].forum = forum;
+    forumDone = YES;
     [self checkComplete];
 }
 
@@ -132,7 +153,7 @@
 - (void)didReceiveError:(NSError *)error context:(UVRequestContext *)requestContext {
     if (dismissed) return;
     NSString *message = nil;
-    if ([error isAuthError]) {
+    if ([UVUtils isAuthError:error]) {
         if ([requestContext.context isEqualToString:@"sso"] || [requestContext.context isEqualToString:@"local-sso"]) {
           // SSO and local SSO can fail with regard to admins. It's ok to proceed without a user.
           userDone = YES;
@@ -141,21 +162,36 @@
         if ([UVAccessToken exists]) {
             [[UVSession currentSession].accessToken remove];
             [UVSession currentSession].accessToken = nil;
-            articlesDone = NO;
-            topicsDone = NO;
-            userDone = NO;
-            configDone = NO;
-            [UVRequestToken getRequestTokenWithDelegate:self];
+            [self loadUser];
             return;
         } else {
             message = NSLocalizedStringFromTable(@"This application didn't configure UserVoice properly", @"UserVoice", nil);
         }
-    } else if ([error isConnectionError]) {
+    } else if ([UVUtils isConnectionError:error]) {
         message = NSLocalizedStringFromTable(@"There appears to be a problem with your network connection, please check your connectivity and try again.", @"UserVoice", nil);
     } else {
         message = NSLocalizedStringFromTable(@"Sorry, there was an error in the application.", @"UserVoice", nil);
     }
-    [[[[UIAlertView alloc] initWithTitle:NSLocalizedStringFromTable(@"Error", @"UserVoice", nil) message:message delegate:self cancelButtonTitle:nil otherButtonTitles:NSLocalizedStringFromTable(@"OK", @"UserVoice", nil), nil] autorelease] show];
+    
+    if (_errorAlertView) {
+        return;
+    }
+    
+    _errorAlertView = [[UIAlertView alloc] initWithTitle:NSLocalizedStringFromTable(@"Error", @"UserVoice", nil)
+                                                 message:message
+                                                delegate:self
+                                       cancelButtonTitle:nil
+                                       otherButtonTitles:NSLocalizedStringFromTable(@"OK", @"UserVoice", nil), nil];
+    [_errorAlertView autorelease];
+    [_errorAlertView show];
+}
+
+- (void)dealloc {
+    if (_errorAlertView) {
+        _errorAlertView.delegate = nil;
+    }
+    
+    [super dealloc];
 }
 
 
