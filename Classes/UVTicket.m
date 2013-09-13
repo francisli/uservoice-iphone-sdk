@@ -41,12 +41,17 @@
     }
 
     NSDictionary *defaultFields = [UVSession currentSession].config.customFields;
-    for (NSString *name in [defaultFields keyEnumerator]) {
-        [params setObject:[defaultFields objectForKey:name] forKey:[NSString stringWithFormat:@"ticket[custom_field_values][%@]", name]];
+    for (NSString *key in [defaultFields keyEnumerator]) {
+        [params setObject:[defaultFields objectForKey:key] forKey:[NSString stringWithFormat:@"ticket[custom_field_values][%@]", key]];
     }
 
-    for (NSString *name in [fields keyEnumerator]) {
-        [params setObject:[fields objectForKey:name] forKey:[NSString stringWithFormat:@"ticket[custom_field_values][%@]", name]];
+    for (NSString *key in [fields keyEnumerator]) {
+        [params setObject:[fields objectForKey:key] forKey:[NSString stringWithFormat:@"ticket[custom_field_values][%@]", key]];
+    }
+
+    if ([UVSession currentSession].config.extraTicketInfo != nil) {
+        NSString *messageText = [NSString stringWithFormat:@"%@\n\n%@", message, [UVSession currentSession].config.extraTicketInfo];
+        [params setObject:messageText forKey:@"ticket[message]"];
     }
 
     return [[self class] postPath:path

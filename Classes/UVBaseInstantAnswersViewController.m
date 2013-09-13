@@ -14,6 +14,7 @@
 #import "UVSuggestion.h"
 #import "UVSuggestionDetailsViewController.h"
 #import "UVHighlightingLabel.h"
+#import "UVUtils.h"
 
 @implementation UVBaseInstantAnswersViewController
 
@@ -31,24 +32,7 @@
 }
 
 - (void)updatePattern {
-    NSRegularExpression *termPattern = [NSRegularExpression regularExpressionWithPattern:@"\\b\\w+\\b" options:0 error:nil];
-    NSMutableString *pattern = [NSMutableString stringWithString:@"\\b("];
-    NSString *query = instantAnswersQuery;
-    __block NSString *lastTerm = nil;
-    [termPattern enumerateMatchesInString:query options:0 range:NSMakeRange(0, [query length]) usingBlock:^(NSTextCheckingResult *match, NSMatchingFlags flags, BOOL *stop){
-        if (lastTerm) {
-            [pattern appendString:lastTerm];
-            [pattern appendString:@"|"];
-        }
-        lastTerm = [query substringWithRange:[match range]];
-    }];
-    if (lastTerm) {
-        [pattern appendString:lastTerm];
-        [pattern appendString:@")"];
-        self.searchPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:nil];
-    } else {
-        self.searchPattern = nil;
-    }
+    self.searchPattern = [UVUtils patternForQuery:instantAnswersQuery];
 }
 
 - (void)searchInstantAnswers:(NSString *)query {
@@ -90,7 +74,10 @@
 }
 
 - (void)selectInstantAnswerAtIndex:(int)index {
-    id model = [self.instantAnswers objectAtIndex:index];
+    NSArray *answers = self.instantAnswers;
+    if (index >= [answers count])
+        return;
+    id model = [answers objectAtIndex:index];
     if ([model isMemberOfClass:[UVArticle class]]) {
         UVArticle *article = (UVArticle *)model;
         [[UVSession currentSession] trackInteraction:@"cf" details:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:article.articleId], @"id", self.instantAnswersQuery, @"t", nil]];
@@ -169,13 +156,17 @@
 
 - (void)initCellForInstantAnswer:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
     cell.backgroundColor = [UIColor whiteColor];
-    UVHighlightingLabel *label = [[[UVHighlightingLabel alloc] initWithFrame:CGRectMake(IPAD ? 75 : 50, 12, cell.bounds.size.width - (IPAD ? 130 : 80), 20)] autorelease];
+    UVHighlightingLabel *label = [[[UVHighlightingLabel alloc] initWithFrame:CGRectMake(IPAD && !IOS7 ? 75 : 50, 12, cell.bounds.size.width - (IPAD ? 130 : 80), 20)] autorelease];
     label.backgroundColor = [UIColor clearColor];
     label.numberOfLines = 2;
     label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     label.font = [UIFont boldSystemFontOfSize:13.0];
     label.tag = HIGHLIGHTING_LABEL_TAG;
     [cell addSubview:label];
+    UIImageView *imageView = [[[UIImageView alloc] initWithFrame:CGRectMake(IPAD && !IOS7 ? 40 : 18, 8, 24, 24)] autorelease];
+    imageView.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
+    imageView.tag = IA_IMAGE_TAG;
+    [cell addSubview:imageView];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 }
 
@@ -184,15 +175,16 @@
         return;
     id model = [instantAnswers objectAtIndex:index];
     UVHighlightingLabel *label = (UVHighlightingLabel *)[cell viewWithTag:HIGHLIGHTING_LABEL_TAG];
+    UIImageView *imageView = (UIImageView *)[cell viewWithTag:IA_IMAGE_TAG];
     label.pattern = searchPattern;
     if ([model isMemberOfClass:[UVArticle class]]) {
         UVArticle *article = (UVArticle *)model;
         label.text = article.question;
-        cell.imageView.image = [UIImage imageNamed:@"uv_article.png"];
+        imageView.image = [UIImage imageNamed:@"uv_article.png"];
     } else {
         UVSuggestion *suggestion = (UVSuggestion *)model;
         label.text = suggestion.title;
-        cell.imageView.image = [UIImage imageNamed:@"uv_idea.png"];
+        imageView.image = [UIImage imageNamed:@"uv_idea.png"];
     }
 }
 

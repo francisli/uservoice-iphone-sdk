@@ -15,6 +15,7 @@
 #import "UVNewTicketViewController.h"
 #import "UVSuggestionListViewController.h"
 #import "UVNavigationController.h"
+#import "UVUtils.h"
 
 @implementation UserVoice
 
@@ -22,7 +23,7 @@
     [UVSession currentSession].config = config;
     [UVSession currentSession].isModal = YES;
     UINavigationController *navigationController = [[[UVNavigationController alloc] init] autorelease];
-    navigationController.navigationBar.tintColor = [UVStyleSheet navigationBarTintColor];
+    [UVUtils applyStylesheetToNavigationController:navigationController];
     navigationController.viewControllers = viewControllers;
     navigationController.modalPresentationStyle = UIModalPresentationFormSheet;
     [parentViewController presentModalViewController:navigationController animated:YES];
@@ -33,17 +34,17 @@
 }
 
 + (void)presentUserVoiceModalViewControllerForParent:(UIViewController *)parentViewController andSite:(NSString *)site andKey:(NSString *)key andSecret:(NSString *)secret {
-    UVConfig *config = [[[UVConfig alloc] initWithSite:site andKey:key andSecret:secret] autorelease];
+    UVConfig *config = [UVConfig configWithSite:site andKey:key andSecret:secret];
     [self presentUserVoiceInterfaceForParentViewController:parentViewController andConfig:config];
 }
 
 + (void)presentUserVoiceModalViewControllerForParent:(UIViewController *)parentViewController andSite:(NSString *)site andKey:(NSString *)key andSecret:(NSString *)secret andSsoToken:(NSString *)token {
-    UVConfig *config = [[[UVConfig alloc] initWithSite:site andKey:key andSecret:secret andSSOToken:token] autorelease];
+    UVConfig *config = [UVConfig configWithSite:site andKey:key andSecret:secret andSSOToken:token];
     [self presentUserVoiceInterfaceForParentViewController:parentViewController andConfig:config];
 }
 
 + (void)presentUserVoiceModalViewControllerForParent:(UIViewController *)parentViewController andSite:(NSString *)site andKey:(NSString *)key andSecret:(NSString *)secret andEmail:(NSString *)email andDisplayName:(NSString *)displayName andGUID:(NSString *)guid {
-    UVConfig *config = [[[UVConfig alloc] initWithSite:site andKey:key andSecret:secret andEmail:email andDisplayName:displayName andGUID:guid] autorelease];
+    UVConfig *config = [UVConfig configWithSite:site andKey:key andSecret:secret andEmail:email andDisplayName:displayName andGUID:guid];
     [self presentUserVoiceInterfaceForParentViewController:parentViewController andConfig:config];
 }
 
@@ -81,7 +82,7 @@ static id<UVDelegate> userVoiceDelegate;
 }
 
 + (NSString *)version {
-    return @"2.0.9";
+    return @"2.0.12";
 }
 
 

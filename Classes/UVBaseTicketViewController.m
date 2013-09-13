@@ -53,17 +53,30 @@
 - (void)dismissKeyboard {
 }
 
+- (BOOL)validateCustomFields {
+    for (UVCustomField *field in [UVSession currentSession].clientConfig.customFields) {
+        if ([field isRequired]) {
+            NSString *value = [selectedCustomFieldValues valueForKey:field.name];
+            if (!value || value.length == 0)
+                return NO;
+        }
+    }
+    return YES;
+}
+
 - (void)sendButtonTapped {
     [self dismissKeyboard];
     self.userEmail = emailField.text;
     self.userName = nameField.text;
     self.text = textView.text;
-    if ([UVSession currentSession].user || (emailField.text.length > 1)) {
+    if (![UVSession currentSession].user && emailField.text.length == 0) {
+        [self alertError:NSLocalizedStringFromTable(@"Please enter your email address before submitting your ticket.", @"UserVoice", nil)];
+    } else if (![self validateCustomFields]) {
+        [self alertError:NSLocalizedStringFromTable(@"Please fill out all required fields.", @"UserVoice", nil)];
+    } else {
         [self showActivityIndicator];
         [UVTicket createWithMessage:self.text andEmailIfNotLoggedIn:emailField.text andName:nameField.text andCustomFields:selectedCustomFieldValues andDelegate:self];
         [[UVSession currentSession] trackInteraction:@"pt"];
-    } else {
-        [self alertError:NSLocalizedStringFromTable(@"Please enter your email address before submitting your ticket.", @"UserVoice", nil)];
     }
 }
 
@@ -153,49 +166,35 @@
     [super didRetrieveInstantAnswers:theInstantAnswers];
 }
 
-- (UITextField *)customizeTextFieldCell:(UITableViewCell *)cell label:(NSString *)label placeholder:(NSString *)placeholder {
-    cell.textLabel.text = label;
-    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(65, 11, cell.bounds.size.width - 75, 22)];
-    textField.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    textField.placeholder = placeholder;
-    textField.returnKeyType = UIReturnKeyDone;
-    textField.borderStyle = UITextBorderStyleNone;
-    textField.backgroundColor = [UIColor clearColor];
-    textField.delegate = self;
-    [cell.contentView addSubview:textField];
-    return [textField autorelease];
-}
-
 - (void)initCellForCustomField:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
     cell.backgroundColor = [UIColor whiteColor];
-    UILabel *label = [[[UILabel alloc] initWithFrame:CGRectMake(16 + (IPAD ? 25 : 0), 0, cell.frame.size.width / 2 - 20, cell.frame.size.height)] autorelease];
-    label.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin;
-    label.font = [UIFont boldSystemFontOfSize:16];
+    UILabel *label = [self addCellLabel:cell];
     label.tag = UV_CUSTOM_FIELD_CELL_LABEL_TAG;
-    label.textColor = [UIColor blackColor];
-    label.backgroundColor = [UIColor clearColor];
-    label.adjustsFontSizeToFitWidth = YES;
-    [cell addSubview:label];
-
-    UITextField *textField = [[[UITextField alloc] initWithFrame:CGRectMake(cell.frame.size.width / 2 + 10, 10, cell.frame.size.width / 2 - (IPAD ? 64 : 20), cell.frame.size.height - 10)] autorelease];
-    textField.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin;
-    textField.borderStyle = UITextBorderStyleNone;
+    UILabel *valueLabel = [self addCellValueLabel:cell];
+    valueLabel.tag = UV_CUSTOM_FIELD_CELL_VALUE_LABEL_TAG;
+    UITextField *textField = [self addCellValueTextField:cell];
     textField.tag = UV_CUSTOM_FIELD_CELL_TEXT_FIELD_TAG;
     textField.delegate = self;
-    [cell addSubview:textField];
 }
 
 - (void)customizeCellForCustomField:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath {
     UVCustomField *field = [[UVSession currentSession].clientConfig.customFields objectAtIndex:indexPath.row];
     UILabel *label = (UILabel *)[cell viewWithTag:UV_CUSTOM_FIELD_CELL_LABEL_TAG];
     UITextField *textField = (UITextField *)[cell viewWithTag:UV_CUSTOM_FIELD_CELL_TEXT_FIELD_TAG];
-    UILabel *valueLabel = cell.detailTextLabel;
-    label.text = field.name;
+    UILabel *valueLabel = (UILabel *)[cell viewWithTag:UV_CUSTOM_FIELD_CELL_VALUE_LABEL_TAG];
+    label.text = [field isRequired] ? [NSString stringWithFormat:@"%@*", field.name] : field.name;
     cell.accessoryType = [field isPredefined] ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone;
     textField.enabled = [field isPredefined] ? NO : YES;
     cell.selectionStyle = [field isPredefined] ? UITableViewCellSelectionStyleBlue : UITableViewCellSelectionStyleNone;
     valueLabel.hidden = ![field isPredefined];
-    valueLabel.text = [selectedCustomFieldValues objectForKey:field.name];
+    textField.hidden = [field isPredefined];
+    if ([selectedCustomFieldValues objectForKey:field.name]) {
+        valueLabel.text = [selectedCustomFieldValues objectForKey:field.name];
+        valueLabel.textColor = [UIColor blackColor];
+    } else {
+        valueLabel.text = NSLocalizedStringFromTable(@"select", @"UserVoice", nil);
+        valueLabel.textColor = [UIColor colorWithRed:0.78f green:0.78f blue:0.80f alpha:1.0f];
+    }
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(nonPredefinedValueChanged:)
                                                  name:UITextFieldTextDidChangeNotification
@@ -243,7 +242,11 @@
                                                 destructiveButtonTitle:NSLocalizedStringFromTable(@"Don't save", @"UserVoice", nil)
                                                      otherButtonTitles:NSLocalizedStringFromTable(@"Save draft", @"UserVoice", nil), nil] autorelease];
 
-    [actionSheet showInView:self.view];
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+        [actionSheet showFromBarButtonItem:self.navigationItem.leftBarButtonItem animated:YES];
+    } else {
+        [actionSheet showInView:self.view];
+    }
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex {

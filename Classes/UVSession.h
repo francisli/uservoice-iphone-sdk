@@ -7,18 +7,19 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "UVUser.h"
 
 @class UVConfig;
 @class UVClientConfig;
-@class UVUser;
 @class UVAccessToken;
 @class UVRequestToken;
 @class YOAuthConsumer;
 @class UVSuggestion;
+@class UVForum;
 
 // Keeps track of data such as the user's login state, app configuration, etc.
 // during the course of a single UserVoice session.
-@interface UVSession : NSObject {
+@interface UVSession : NSObject<UVUserDelegate> {
     BOOL isModal;
     UVConfig *config;
     UVClientConfig *clientConfig;
@@ -26,8 +27,7 @@
     YOAuthConsumer *yOAuthConsumer;
     UVAccessToken *accessToken;
     UVRequestToken *requestToken;
-    NSMutableDictionary *userCache;
-    NSDate *startTime;
+    UVForum *forum;
     NSMutableDictionary *interactions;
     NSMutableArray *interactionSequence;
     NSMutableArray *interactionDetails;
@@ -40,14 +40,13 @@
     UVSuggestion *flashSuggestion;
 }
 
-@property (assign) BOOL isModal;
+@property (nonatomic, assign) BOOL isModal;
 @property (nonatomic, retain) UVConfig *config;
 @property (nonatomic, retain) UVClientConfig *clientConfig;
 @property (nonatomic, retain) UVUser *user;
+@property (nonatomic, retain) UVForum *forum;
 @property (nonatomic, retain) UVAccessToken *accessToken;
 @property (nonatomic, retain) UVRequestToken *requestToken;
-@property (nonatomic, retain) NSMutableDictionary *userCache;
-@property (nonatomic, retain) NSDate *startTime;
 @property (nonatomic, retain) NSMutableDictionary *interactions;
 @property (nonatomic, retain) NSMutableArray *interactionSequence;
 @property (nonatomic, retain) NSMutableArray *interactionDetails;
@@ -57,7 +56,7 @@
 @property (nonatomic, retain) NSString *flashTitle;
 @property (nonatomic, retain) NSString *flashMessage;
 @property (nonatomic, retain) UVSuggestion *flashSuggestion;
-@property (assign) NSUInteger interactionId;
+@property (nonatomic, assign) NSUInteger interactionId;
 
 + (UVSession *)currentSession;
 - (YOAuthConsumer *)yOAuthConsumer;
