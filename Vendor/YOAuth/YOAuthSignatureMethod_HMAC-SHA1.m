@@ -12,7 +12,7 @@
 
 #import <CommonCrypto/CommonHMAC.h>
 
-#include "Base64Transcoder.h"
+#include "Crypto/Base64Transcoder.h"
 
 @implementation YOAuthSignatureMethod_HMAC_SHA1
 
@@ -43,7 +43,7 @@
     
     NSString *base64EncodedResult = [[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding];
     
-    return [base64EncodedResult autorelease];
+    return base64EncodedResult;
 }
 
 - (BOOL)checkSignature:(NSString *)aSignature withSignableString:(NSString *)aSignableString andSecrets:(NSString *)aSecret

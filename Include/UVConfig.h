@@ -8,22 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface UVConfig : NSObject {
-    NSString *site;
-    NSString *key;
-    NSString *secret;
-    NSString *ssoToken;
-    NSString *displayName;
-    NSString *email;
-    NSString *guid;
-    NSString *extraTicketInfo;
-    NSInteger topicId;
-    NSInteger forumId;
-    BOOL showForum;
-    BOOL showPostIdea;
-    BOOL showContactUs;
-    BOOL showKnowledgeBase;
-}
+@interface UVConfig : NSObject
 
 + (UVConfig *)configWithSite:(NSString *)site;
 
@@ -47,7 +32,11 @@
 @property (nonatomic, assign) BOOL showContactUs;
 @property (nonatomic, assign) BOOL showKnowledgeBase;
 @property (nonatomic, retain) NSString* extraTicketInfo;
+@property (nonatomic, retain) NSDictionary *userTraits;
 
 - (void)identifyUserWithEmail:(NSString *)email name:(NSString *)name guid:(NSString *)guid;
+
+// merged user and account traits
+- (NSDictionary *)traits;
 
 @end

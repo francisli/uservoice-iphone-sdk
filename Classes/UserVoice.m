@@ -12,25 +12,44 @@
 #import "UVWelcomeViewController.h"
 #import "UVRootViewController.h"
 #import "UVSession.h"
-#import "UVNewTicketViewController.h"
 #import "UVSuggestionListViewController.h"
 #import "UVNavigationController.h"
 #import "UVUtils.h"
+#import "UVBabayaga.h"
+#import "UVClientConfig.h"
 
 @implementation UserVoice
 
-+ (void) presentUserVoiceControllers:(NSArray *)viewControllers forParentViewController:(UIViewController *)parentViewController withConfig:(UVConfig *)config {
++ (void)initialize:(UVConfig *)config {
+    [[UVSession currentSession] clear];
+    [UVBabayaga instance].userTraits = [config traits];
     [UVSession currentSession].config = config;
+    [UVBabayaga track:VIEW_APP];
+    // preload client config so that babayaga can flush
+    [UVClientConfig getWithDelegate:self];
+}
+
++ (void)didRetrieveClientConfig:(UVClientConfig *)clientConfig {
+    [UVSession currentSession].clientConfig = clientConfig;
+}
+
++ (UINavigationController *)getNavigationControllerForUserVoiceControllers:(NSArray *)viewControllers {
+    [UVBabayaga track:VIEW_CHANNEL];
     [UVSession currentSession].isModal = YES;
-    UINavigationController *navigationController = [[[UVNavigationController alloc] init] autorelease];
+    UINavigationController *navigationController = [UVNavigationController new];
     [UVUtils applyStylesheetToNavigationController:navigationController];
     navigationController.viewControllers = viewControllers;
     navigationController.modalPresentationStyle = UIModalPresentationFormSheet;
-    [parentViewController presentModalViewController:navigationController animated:YES];
+    return navigationController;
 }
 
-+ (void) presentUserVoiceController:(UIViewController *)viewController forParentViewController:(UIViewController *)parentViewController withConfig:(UVConfig *)config {
-    [self presentUserVoiceControllers:[NSArray arrayWithObject:viewController] forParentViewController:parentViewController withConfig:config];
++ (void)presentUserVoiceControllers:(NSArray *)viewControllers forParentViewController:(UIViewController *)parentViewController {
+    UINavigationController *navigationController = [self getNavigationControllerForUserVoiceControllers:viewControllers];
+    [parentViewController presentViewController:navigationController animated:YES completion:nil];
+}
+
++ (void)presentUserVoiceController:(UIViewController *)viewController forParentViewController:(UIViewController *)parentViewController {
+    [self presentUserVoiceControllers:[NSArray arrayWithObject:viewController] forParentViewController:parentViewController];
 }
 
 + (void)presentUserVoiceModalViewControllerForParent:(UIViewController *)parentViewController andSite:(NSString *)site andKey:(NSString *)key andSecret:(NSString *)secret {
@@ -48,28 +67,66 @@
     [self presentUserVoiceInterfaceForParentViewController:parentViewController andConfig:config];
 }
 
++ (UIViewController *)getUserVoiceInterface {
+    return [[UVRootViewController alloc] initWithViewToLoad:@"welcome"];
+}
+
++ (void)presentUserVoiceInterfaceForParentViewController:(UIViewController *)parentViewController {
+    [self presentUserVoiceController:[self getUserVoiceInterface] forParentViewController:parentViewController];
+}
+
++ (UIViewController *)getUserVoiceContactUsForm {
+    return [[UVRootViewController alloc] initWithViewToLoad:@"new_ticket"];
+}
+
++ (UIViewController *)getUserVoiceContactUsFormForModalDisplay {
+    return [self getNavigationControllerForUserVoiceControllers:@[[self getUserVoiceContactUsForm]]];
+}
+
++ (void)presentUserVoiceContactUsFormForParentViewController:(UIViewController *)parentViewController {
+    [self presentUserVoiceController:[self getUserVoiceContactUsForm] forParentViewController:parentViewController];
+}
+
++ (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController {
+    UIViewController *viewController = [[UVRootViewController alloc] initWithViewToLoad:@"new_suggestion"];
+    [self presentUserVoiceController:viewController forParentViewController:parentViewController];
+}
+
++ (void)presentUserVoiceForumForParentViewController:(UIViewController *)parentViewController {
+    UIViewController *viewController = [[UVRootViewController alloc] initWithViewToLoad:@"suggestions"];
+    [self presentUserVoiceController:viewController forParentViewController:parentViewController];
+}
+
 + (void)presentUserVoiceInterfaceForParentViewController:(UIViewController *)parentViewController andConfig:(UVConfig *)config {
-    UIViewController *viewController = [[[UVRootViewController alloc] initWithViewToLoad:@"welcome"] autorelease];
-    [self presentUserVoiceController:viewController forParentViewController:parentViewController withConfig:config];
+    [self initialize:config];
+    [self presentUserVoiceInterfaceForParentViewController:parentViewController];
 }
 
 + (void)presentUserVoiceContactUsFormForParentViewController:(UIViewController *)parentViewController andConfig:(UVConfig *)config {
-    UIViewController *viewController = [[[UVRootViewController alloc] initWithViewToLoad:@"new_ticket"] autorelease];
-    [self presentUserVoiceController:viewController forParentViewController:parentViewController withConfig:config];
+    [self initialize:config];
+    [self presentUserVoiceContactUsFormForParentViewController:parentViewController];
 }
 
 + (void)presentUserVoiceNewIdeaFormForParentViewController:(UIViewController *)parentViewController andConfig:(UVConfig *)config {
-    UIViewController *viewController = [[[UVRootViewController alloc] initWithViewToLoad:@"new_suggestion"] autorelease];
-    [self presentUserVoiceController:viewController forParentViewController:parentViewController withConfig:config];
+    [self initialize:config];
+    [self presentUserVoiceNewIdeaFormForParentViewController:parentViewController];
 }
 
 + (void)presentUserVoiceForumForParentViewController:(UIViewController *)parentViewController andConfig:(UVConfig *)config {
-    UIViewController *viewController = [[[UVRootViewController alloc] initWithViewToLoad:@"suggestions"] autorelease];
-    [self presentUserVoiceController:viewController forParentViewController:parentViewController withConfig:config];
+    [self initialize:config];
+    [self presentUserVoiceForumForParentViewController:parentViewController];
 }
 
 + (void)setExternalId:(NSString *)identifier forScope:(NSString *)scope {
     [[UVSession currentSession] setExternalId:identifier forScope:scope];
+}
+
++ (void)track:(NSString *)event properties:(NSDictionary *)properties {
+    [UVBabayaga track:event props:properties];
+}
+
++ (void)track:(NSString *)event {
+    [UVBabayaga track:event];
 }
 
 static id<UVDelegate> userVoiceDelegate;
@@ -82,7 +139,7 @@ static id<UVDelegate> userVoiceDelegate;
 }
 
 + (NSString *)version {
-    return @"2.0.12";
+    return @"3.0.2";
 }
 
 
