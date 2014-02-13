@@ -33,7 +33,7 @@
 - (id)init {
     if (self = [super init]) {
         self.title = NSLocalizedStringFromTable(@"Feedback & Support", @"UserVoice", nil);
-        self.tabBarItem.image = [UIImage imageNamed:@"uv_icon.png"];
+        self.tabBarItem.image = [UIImage imageNamed:@"Feedback"];
         self.hidesBottomBarWhenPushed = YES;
     }
     return self;
