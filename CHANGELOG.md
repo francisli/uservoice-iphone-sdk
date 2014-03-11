@@ -1,6 +1,22 @@
 ## master ##
 
-# 3.0.2 (2014-01-16) ##
+* Fix a bug where the comment form submit button would be incorrectly disabled
+* Show an error message when the user tries to submit a comment with no text
+* Fix a bug where the post idea form submit button would be incorrectly hidden
+* Add `navigationBarActivityIndicatorColor` customization option
+* Show cancel button rather than back button while user is submitting an idea or ticket
+* Add NSURLErrorNetworkConnectionLost to list of errors treated as connectivity errors
+* Add email format validation
+
+## 3.0.3 (2014-02-25) ##
+
+* Fix a bug where kb-only portal view would not display topic names
+* Add resource bundle support for cocoapods
+* Fix some pedantic Xcode warnings
+* Remove some unused resources
+* Fix a crash related to saving external ids
+
+## 3.0.2 (2014-01-16) ##
 
 * Fix a crash caused by selecting a search result on the portal screen
 * Fix a bug in the metrics code

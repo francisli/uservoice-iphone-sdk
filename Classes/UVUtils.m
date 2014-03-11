@@ -9,6 +9,7 @@
 #import "UVUtils.h"
 #import "UVDefines.h"
 #import "UVStyleSheet.h"
+#import "UserVoice.h"
 
 @implementation UVUtils
 
@@ -198,9 +199,10 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 
 + (BOOL)isConnectionError:(NSError *)error {
     return ([error domain] == NSURLErrorDomain) && (
-        [error code] == -1001 ||
-        [error code] == -1004 ||
-        [error code] == -1009);
+        [error code] == NSURLErrorTimedOut ||
+        [error code] == NSURLErrorCannotConnectToHost ||
+        [error code] == NSURLErrorNetworkConnectionLost ||
+        [error code] == NSURLErrorNotConnectedToInternet);
 }
 
 + (BOOL)isUVRecordInvalid:(NSError *)error {
@@ -276,6 +278,14 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     if (includeFinalConstraint) {
         [superview addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:finalConstraint options:0 metrics:nil views:viewsDict]];
     }
+}
+
++ (UIImage *)imageNamed:(NSString *)name {
+    return [UIImage imageWithContentsOfFile:[[[UserVoice bundle] resourcePath] stringByAppendingPathComponent:name]];
+}
+
++ (UIImageView *)imageViewWithImageNamed:(NSString *)name {
+    return [[UIImageView alloc] initWithImage:[UVUtils imageNamed:name]];
 }
 
 

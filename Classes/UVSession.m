@@ -15,6 +15,7 @@
 #import "UVSubdomain.h"
 #import "UVUtils.h"
 #import "UVBabayaga.h"
+#import "UVUser.h"
 #import <stdlib.h>
 
 @implementation UVSession
@@ -28,6 +29,14 @@
     }
 
     return currentSession;
+}
+
+- (void)preloadClientConfig {
+    [UVClientConfig getWithDelegate:self];
+}
+
+- (void)didRetrieveClientConfig:(UVClientConfig *)clientConfig {
+    self.clientConfig = clientConfig;
 }
 
 - (BOOL)loggedIn {
@@ -61,6 +70,10 @@
     if (_user) {
         [_user identify:identifier withScope:scope delegate:self];
     }
+}
+
+- (void)didIdentifyUser:(UVUser *)user {
+    // nothing to do
 }
 
 // This is used when dismissing UV so that everything gets reloaded
